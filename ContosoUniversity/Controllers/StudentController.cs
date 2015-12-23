@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Data;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
-using System.Web;
 using System.Web.Mvc;
 using ContosoUniversity.DAL;
 using ContosoUniversity.Models;
@@ -13,12 +10,30 @@ namespace ContosoUniversity.Controllers
 {
     public class StudentController : Controller
     {
-        private SchoolContext db = new SchoolContext();
+        private readonly SchoolContext db = new SchoolContext();
 
         // GET: Student
-        public ActionResult Index()
+        public ActionResult Index(string sortOrder)
         {
-            return View(db.Students.ToList());
+            ViewBag.NameSortParm = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewBag.DateSortParm = sortOrder == "Date" ? "date_desc" : "Date";
+            var students = from s in db.Students select s;
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    students = students.OrderByDescending(s => s.LastName);
+                    break;
+                case "Date":
+                    students = students.OrderBy(s => s.EnrollmentDate);
+                    break;
+                case "date_desc":
+                    students = students.OrderByDescending(s => s.EnrollmentDate);
+                    break;
+                default:
+                    students = students.OrderBy(s => s.LastName);
+                    break;
+            }
+            return View(students.ToList());
         }
 
         // GET: Student/Details/5
@@ -28,7 +43,7 @@ namespace ContosoUniversity.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Student student = db.Students.Find(id);
+            var student = db.Students.Find(id);
             if (student == null)
             {
                 return HttpNotFound();
@@ -60,7 +75,8 @@ namespace ContosoUniversity.Controllers
             }
             catch (DataException)
             {
-                ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
+                ModelState.AddModelError("",
+                    "Unable to save changes. Try again, and if the problem persists see your system administrator.");
             }
 
             return View(student);
@@ -73,7 +89,7 @@ namespace ContosoUniversity.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            Student student = db.Students.Find(id);
+            var student = db.Students.Find(id);
             if (student == null)
             {
                 return HttpNotFound();
@@ -99,13 +115,14 @@ namespace ContosoUniversity.Controllers
             }
             catch (DataException)
             {
-                ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists see your system administrator.");
+                ModelState.AddModelError("",
+                    "Unable to save changes. Try again, and if the problem persists see your system administrator.");
             }
             return View(student);
         }
 
         // GET: Student/Delete/5
-        public ActionResult Delete(int? id,bool? saveChangesError)
+        public ActionResult Delete(int? id, bool? saveChangesError)
         {
             if (id == null)
             {
@@ -113,9 +130,10 @@ namespace ContosoUniversity.Controllers
             }
             if (saveChangesError.GetValueOrDefault())
             {
-                ViewBag.ErrorMessage = "Delete failed. Try again, and if the problem persists see your system administrator.";
+                ViewBag.ErrorMessage =
+                    "Delete failed. Try again, and if the problem persists see your system administrator.";
             }
-            Student student = db.Students.Find(id);
+            var student = db.Students.Find(id);
             if (student == null)
             {
                 return HttpNotFound();
@@ -130,13 +148,13 @@ namespace ContosoUniversity.Controllers
         {
             try
             {
-                Student student = new Student() {Id = id};
-                db.Entry(student).State=EntityState.Deleted;
+                var student = new Student {Id = id};
+                db.Entry(student).State = EntityState.Deleted;
                 db.SaveChanges();
             }
             catch (DataException)
             {
-                return RedirectToAction("Delete", new { id = id, saveChangesError = true });
+                return RedirectToAction("Delete", new {id, saveChangesError = true});
             }
             return RedirectToAction("Index");
         }
