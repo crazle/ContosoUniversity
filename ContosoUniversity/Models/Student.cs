@@ -10,8 +10,8 @@ namespace ContosoUniversity.Models
     public class Student
     {
         public int Id { get; set; }
-        [Required]
-        [StringLength(50)]
+        [Display(Name = "Last Name")]
+        [StringLength(50,MinimumLength = 1)]
         public string LastName { get; set; }
         [Required]
         [StringLength(50, ErrorMessage = "First name cannot be longer than 50 characters.")]
