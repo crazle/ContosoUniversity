@@ -130,8 +130,8 @@ namespace ContosoUniversity.Controllers
         {
             try
             {
-                Student student = db.Students.Find(id);
-                db.Students.Remove(student);
+                Student student = new Student() {Id = id};
+                db.Entry(student).State=EntityState.Deleted;
                 db.SaveChanges();
             }
             catch (DataException)
